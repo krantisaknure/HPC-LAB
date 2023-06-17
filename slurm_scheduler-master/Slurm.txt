@@ -1,0 +1,123 @@
+Slurm installation:
+~~~~~~~~~~~~~~~~~~~
+Create 3 vm (1 master,2nodes)
+-----------------------------
+Pre-configuration:
+	1)Disable firewalld
+	2)Disable Selinux
+	3)vi /etc/hosts (entry:ip and hostname of vms)
+	4)scp 
+		# scp /etc/hosts root@nodes:/etc/hosts
+	5)User srync
+		# scp /etc/passwd root@node1:/etc/passwd
+		# scp /etc/group root@node1:/etc/group
+		# scp /etc/shadow root@node1:/etc/shadow
+	6)Time syrc
+		# yum install chrony
+		# vi /etc/chrony.conf
+	7)passward-less ssh
+		# yum install openssh
+		# ssh-keygen
+		# ssh-copy-id root@node2
+	8)nfs mount
+		master:
+		# mkdir home
+		# yum install nfs-utils
+		# vi /etc/exports
+			/root/home *(rw,sync,no_root_squash)
+		# systemctl restart nfs-server.service 
+ 		# exportfs -arv
+		client:
+		# mkdir home 
+		# showmount -e master
+		# mount -t nfs master:/root/home /root/home
+		# df -TH
+
+````````````````````````````````````````````````````````````````````
+# yum install epel-release -y
+
+wget https://download.schedmd.com/slurm/slurm-22.05.7.tar.bz2
+
+
+)# yum install mariadb-server mariadb-devel -y
+
+4)# yum install munge munge-libs munge-devel -y		(master & client also)
+
+5)# cd Downloads/
+
+6)# yum install pam-devel perl"(ExtUtils::MakeMaker)" gcc python3 readline-devel rpm-build -y
+
+7)# rpmbuild -ta slurm-22.05.7.tar.bz2 
+
+8)# cd /usr/sbin/
+	# create-munge-key -r
+9)# scp /etc/munge/munge.key root@nodes:/etc/munge
+	#systemctl start munge
+10)# chmod 400 /etc/munge/munge.key
+	# chown -R munge:munge munge.key 	(clients)
+
+11)# cd /root/rpmbuild/RPMS/x86_64/
+
+12)#cd
+
+13)# cd home/x86_64		(clients)
+	#ls
+14)# rm -rf slurm-slurmctld-22.05.7-1.el7.x86_64.rpm 		(clients)
+
+15)# rm -rf slurm-slurmdbd-22.05.7-1.el7.x86_64.rpm 		(clients)
+
+16)# yum install slurm* -y 		(clients)
+
+17)# export SLURMUSER=992
+
+18)# groupadd -g $SLURMUSER slurm
+# useradd -m -c "slurm workload manager" -d /var/lib/slurm -u $SLURMUSER -g slurm -s /bin/bash slurm
+
+
+19)# cp /etc/slurm/slurm.conf.example /etc/slurm/slurm.conf
+
+20)# cd /etc/slurm/
+
+21)# vi slurm.conf
+		change: 1)cluster name : <..............>
+		``````` 2)slurmctlHost : master
+			  3)StateSaveLocation :/var/share/slurm/ctld
+			  4)SlurmSpoolDir : /var/share/slurm/d
+22)# mkdir -p /var/share/slurm/ctld
+
+23)# chown -R slurm:slurm /var/share/slurm
+
+24)# touch /var/log/slurmctld.log
+   # mkdir -p /var/share/slurm/d
+25)# chown -R slurm:slurm /var/log/slurmctld.log
+
+	 ## cp -R /root/rpmbuild/RPMS/x86_64/ /root/home/
+	
+ # scp /etc/slurm/slurm.conf root@node1:/etc/slurm/
+
+26)# cp /etc/slurm/cgroup.conf.example /etc/slurm/cgroup.conf
+
+27)# scp /etc/slurm/cgroup.conf root@nodes:/etc/slurm/cgroup.conf
+
+28)# systemctl restart slurmctld
+
+29)# systemctl start slurmd
+# scontrol update nodename=node2 state=idle
+
+# slurmd -C
+
+30)# sinfo
+
+
+Accounting:script
+https://docs-research-it.berkeley.edu/services/high-performance-computing/user-guide/running-your-jobs/scheduler-examples/
+
+run: sbatch script.sh
+
+# squeue
+
+# sinfo
+
+See on client machine slurm<jobid>.out file.
+
+# scontrol show job id

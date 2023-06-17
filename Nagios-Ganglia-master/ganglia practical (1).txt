@@ -1,0 +1,108 @@
+ganglia server
+   cd
+    2  systemctl status firewalld.service 
+    3  systemctl stop firewalld.service
+    4  vim /etc/hosts
+    5   hostnamectl set-hostname ganglia-server
+    6  cd
+    7   systemctl stop firewalld
+    8   vi /etc/selinux/config
+    9  systemctl enable firewalld
+   10  systemctl stop firewalld
+   11  systemctl disable firewalld
+   12  reboot
+   13  cd
+   14  vim /etc/hosts
+        192.168.148  ganglia-server
+        192.168      ganglia-client
+   15 yum update && yum install epel-release
+   16 yum install ganglia rrdtool ganglia-gmetad ganglia-gmond ganglia-web 
+    vi  /etc/httpd/conf.d/ganglia.conf
+       Alias /ganglia /usr/share/ganglia
+<Location /ganglia>
+    AuthType basic
+    AuthName "Ganglia web UI"
+    AuthBasicProvider file
+    AuthUserFile "/etc/httpd/auth.basic"
+    Require user adminganglia
+</Location>
+18 vi  /etc/ganglia/gmetad.conf
+    gridname "Home office"
+    data_source "Labs" 60 192.168.0.29:8649 # Master node
+    data_source "Labs" 60 192.168.0.32 # Monitored node
+    
+ 19 vi  /etc/ganglia/gmond.conf
+    cluster {
+name = "Labs" # The name in the data_source directive in gmetad.conf
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+  udp_send_channel   {
+  #mcast_join = 239.2.11.71
+  host = localhost
+  port = 8649
+  ttl = 1
+}
+
+ udp_recv_channel {
+  #mcast_join = 239.2.11.71 ## comment out
+  port = 8649
+  #bind = 239.2.11.71 ## comment out
+}
+
+ 47 systemctl restart httpd gmetad gmond
+ 48 systemctl enable httpd gmetad httpd
+   browser-------->http://192.168.248.132/ganglia
+    it will show dashboard
+ ganglia client
+    cd
+    2  hostnamectl set-hostname ganglia-client
+    3  exit
+    4  cd
+    5  systemctl stop firewalld
+    6  ip a
+    7  sudo aptitude update && aptitude install ganglia-monitor
+    8  systemctl status firewalld.service
+    9  systemctl stop firewalld.service 
+   10   systemctl stop firewalld
+   11   systemctl disable firewalld
+   12  vi /etc/selinux/config 
+   13  reboot
+   14  yum install ganglia rrdtool ganglia-gmetad ganglia-gmond ganglia-web
+   15  aptitude update && aptitude install ganglia-monitor
+   16  yum update && yum install ganglia-monitor
+   17  kill -9 2837
+   18  yum update && yum install ganglia-monitor
+   19  yum install ganglia rrdtool ganglia-gmetad ganglia-gmond ganglia-web
+   20  yum install ganglia
+   21  yum install epel-release
+   22  yum install ganglia rrdtool ganglia-gmetad ganglia-gmond ganglia-web 
+   23  vim /etc/ganglia/gmond.conf 
+          cluster {
+name = "Labs" # The name in the data_source directive in gmetad.conf
+owner = "unspecified"
+latlong = "unspecified"
+url = "unspecified"
+}
+
+udp_send_channel   {
+  mcast_join = 239.2.11.71
+  host = localhost
+  port = 8649
+  ttl = 1
+}
+
+udp_recv_channel {
+  mcast_join = 239.2.11.71 ## comment out
+  port = 8649
+  bind = 239.2.11.71 ## comment out
+}
+   24  service ganglia-monitor restart
+   25  systemctl restart httpd gmetad gmond
+   26  systemctl enable httpd gmetad httpd
+   
+refresh the browser page it will show the number of node added as host up host down 
+folowing link for help:
+https://www.tecmint.com/install-configure-ganglia-monitoring-centos-linux/

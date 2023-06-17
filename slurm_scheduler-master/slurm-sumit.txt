@@ -1,0 +1,59 @@
+documentation for script :- sample slurm script
+
+#Prerequtsite
+Disable Firewall
+Disable Selinux
+Make Hosts
+Make Passwordless SSH
+Creaate NFS Storage
+Time sync (Chrony)
+User Sync (rsync)
+
+wget https://download.schedmd.com/slurm/slurm-22.05.7.tar.bz2
+rpmbuild slurm-22.0507.tar.bz2
+yum install -y mariadb-server mariadb-devel epel-release munge munge-libs munge-devel rpm-build python3 perl-ExtUtitils-Install gcc
+yum install openssl openssl-devel pam-devel numactl numactl-devel hwloc hwloc-devel lua lua-devel readline-devel rrdtool-devel ncurses-devel man2html libibmad libibumad -y
+/usr/sbin/create-munge-key -r
+chown munge:munge /etc/munge
+scp /etc/munge/munge.key node1:/etc/munge/
+chmod 400 /etc/munge/munge.key
+cd /root/rpmbuild/RPMS/x86_64/
+yum install slurm*
+
+export SLURMUSER=992
+groupadd -g $SLURMUSER slurm
+useradd -m -c "SLURM workload manager" -d /var/lib/slurm -u $SLURMUSER -g slurm -s /bin/bash slurm
+cp /etc/slurm/slurm.conf.example /etc/slurm/slurm.conf
+nano /etc/slurm/slurm.conf
+	clusturname=marvel    #your choice
+
+mkdir -p /var/share/slurm/ctld
+vi /etc/slurm/slurm.conf
+	stateSaveLocation=/var/share/slurm/ctld
+	SlurmSpoolDir=/var/share/slurm/d
+chown -R slurm:slurm /var/share/slurm
+touch /var/log/slurmctld.log
+
+#on client
+slurm -C
+#copy node dettail and paste on master's slurm.conf
+
+#master
+vi /etc/slurm/slurm.conf
+#paste node details of client
+
+#client
+mkdir -p /var/share/slurm/d
+chown -R slurm:slurm /var/share/slurm
+touch /var/log/slurmdlog
+
+#production
+sinfo
+scontrol update nodename=[name] state=idle
+srun -N1 /bin/sh
+srun -N1 --pty /bin/bash
+squeue
+scancel
+
+
+
