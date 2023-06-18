@@ -1,0 +1,337 @@
+
+###############master###############
+1)First Step
+Do this process on machine master
+
+yum update -y
+yum upgrade -y
+hostnamectl set-hostname master
+
+Entry add both machine name and IP address in /etc/hosts file
+vi /etc/hosts
+192.168.20.162 master
+192.168.20.163 node1
+
+
+######################node1#####################
+2)Second Step
+Do this process on machine node1
+
+yum update -y
+yum upgrade -y
+hostnamectl set-hostname node1
+
+Entry add both machine name and IP address in /etc/hosts file
+vim /etc/hosts
+192.168.20.162 master
+192.168.20.163 node1
+
+
+###################Passwordless_SSH on master#####################
+
+if already present there .ssh then remove it using below command
+
+rm -rf .ssh
+
+then we required to create again ssh-keygen
+
+switch user in root
+
+[root@master ~]# ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:THw6y1AXk+B+dspLRFuOhkPYeJA7wV1D5rFXzAmJYPI root@master
+The key's randomart image is:
++---[RSA 2048]----+
+|     .oo+=Oo.=.. |
+|      +@.oo*..+  |
+|      ooE * o    |
+|      oB * *     |
+|      ..S B o    |
+|       o X o     |
+|        o +      |
+|         . .     |
+|          .      |
++----[SHA256]-----+
+
+[root@master ~]# ls .ssh
+id_rsa  id_rsa.pub
+
+[root@master ~]# cd .ssh
+[root@master .ssh]# ls
+id_rsa  id_rsa.pub
+
+[root@master .ssh]# ssh node1
+The authenticity of host 'node1 (192.168.20.163)' can't be established.
+ECDSA key fingerprint is SHA256:MrAXHN9MFEddSaBcsTH5Qfgeexf15A4GYiofmw0hzGo.
+ECDSA key fingerprint is MD5:48:39:8d:63:0d:e5:05:79:82:95:aa:14:f3:3b:aa:e3.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'node1,192.168.20.163' (ECDSA) to the list of known hosts.
+root@node1's password:
+
+Exit
+
+again got to master root directory
+[root@master .ssh]# cd
+[root@master ~]# cd .ssh
+[root@master .ssh]# ls
+authorized_keys  id_rsa  id_rsa.pub  known_hosts
+
+Check master ssh public key present or not
+
+[root@master .ssh]# cat id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFLpv+ak+PsRyizqitrnGGdaBOZ4f4sdmVfLJNRyY4GYtLoAHnppPFBjKRXZ7LwBdcBLCPR7dAPXCduZJcyJnC2PRN5KN4XqNlnmmJ1mdPFSNlKg6/aJxbrBRYfAeLs+1GmNUkGrpXbQqJXTijIT83URL1fHnojKXjDq24SKN6yAkdMiolavaDVJnOMEWyDFxxjvetXBRJ8heSEYA8bfSDd3ST+s60O867+posqZHzXRjCQ548lwQ1EymIBfmisoUplFip61MyY1dmOgbRn1Nvl31hArGhWeIlljRS5Bf/fx0Riw7sarkjpZ7RrA+MhrBEj60NZ7+Cx3HL0mOAlGxL root@master
+
+then create one file name authorized_keys in master .ssh folder
+After creating file go to node1 machine and check id_rsa.pub key using cat id_rsa.pub and copy this key and paste this key on master authorized_keys file
+
+[root@node1 .ssh]# cat id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3rWxgSSpVgA5DHYw3s7o/5qSBBnRQYVeeUQ3o5uF5j68Fl7WHjpnW8gLky/yRUD6q7nUf+aus5vYLJ5JXyXymWiRqPN3M348AdY96TnHiVTle/2MTOYCSGfjD/Jez2nEwCYemroX/+9VPFUbQ0fw8JQ6TVfYMmWQ50BT6gLJRTDF5aWCt7lWshQ4vtXp+KSZPfwPpWjnrpql+qf7JkkBdGZVdM4KDxKmN3GOP8EBd5jZ8AJTJh7M0Uz6Gv0X5hhTvixPobmnYQwx/TCnbJNlW08X5yRpC1KoL0jyBvtMYPM4lkkT8ii0yZnP3DJR17zKYhIGmRXaON0Dw/FDE0oYX root@node1
+
+[root@master .ssh]# vim authorized_keys
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3rWxgSSpVgA5DHYw3s7o/5qSBBnRQYVeeUQ3o5uF5j68Fl7WHjpnW8gLky/yRUD6q7nUf+aus5vYLJ5JXyXymWiRqPN3M348AdY96TnHiVTle/2MTOYCSGfjD/Jez2nEwCYemroX/+9VPFUbQ0fw8JQ6TVfYMmWQ50BT6gLJRTDF5aWCt7lWshQ4vtXp+KSZPfwPpWjnrpql+qf7JkkBdGZVdM4KDxKmN3GOP8EBd5jZ8AJTJh7M0Uz6Gv0X5hhTvixPobmnYQwx/TCnbJNlW08X5yRpC1KoL0jyBvtMYPM4lkkT8ii0yZnP3DJR17zKYhIGmRXaON0Dw/FDE0oYX root@node1
+
+:wq
+save file
+
+[root@master ~]# ssh node1
+Last login: Wed May 31 11:27:24 2023 from master
+[root@node1 ~]#
+
+###################Passwordless_SSH on node1#####################
+
+if already present there .ssh then remove it using below command
+
+rm -rf .ssh
+
+then we required to create again ssh-keygen
+
+switch user in root
+[root@node1 ~]# hostname
+node1
+[root@node1 ~]# rm -rf .ssh
+
+[root@node1 ~]# ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:OM/RCpAc+71dMFibBERnJFLHmALM8j+JuzmjUtk2jBI root@node1
+The key's randomart image is:
++---[RSA 2048]----+
+|   oo..+**B      |
+|  ..o+..oO.o     |
+|   o=  .. =      |
+|E   .o o . o     |
+| . = o=.S . .    |
+|. + * += = .     |
+| o . o .= .      |
+|.   +.           |
+| ...o+           |
++----[SHA256]-----+
+[root@node1 ~]#
+[root@node1 ~]# cd .ssh
+[root@node1 .ssh]# ls
+id_rsa  id_rsa.pub
+[root@node1 .ssh]# ssh master
+The authenticity of host 'master (192.168.20.162)' can't be established.
+ECDSA key fingerprint is SHA256:ZkgtvPgCDwoN6fxrl5DtvSDOpCbJNbnolwDcAmYwRJY.
+ECDSA key fingerprint is MD5:cd:7a:2e:fd:ef:12:b5:d8:8a:84:97:08:1c:3a:d4:eb.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'master,192.168.20.162' (ECDSA) to the list of known hosts.
+root@master's password:
+Last failed login: Wed May 31 11:06:38 IST 2023 from node1 on ssh:notty
+There were 2 failed login attempts since the last successful login.
+Last login: Wed May 31 11:05:41 2023 from master
+[root@master ~]# exit
+logout
+Connection to master closed.
+
+[root@node1 .ssh]# ls
+id_rsa  id_rsa.pub  known_hosts
+
+[root@node1 .ssh]# cat id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3rWxgSSpVgA5DHYw3s7o/5qSBBnRQYVeeUQ3o5uF5j68Fl7WHjpnW8gLky/yRUD6q7nUf+aus5vYLJ5JXyXymWiRqPN3M348AdY96TnHiVTle/2MTOYCSGfjD/Jez2nEwCYemroX/+9VPFUbQ0fw8JQ6TVfYMmWQ50BT6gLJRTDF5aWCt7lWshQ4vtXp+KSZPfwPpWjnrpql+qf7JkkBdGZVdM4KDxKmN3GOP8EBd5jZ8AJTJh7M0Uz6Gv0X5hhTvixPobmnYQwx/TCnbJNlW08X5yRpC1KoL0jyBvtMYPM4lkkT8ii0yZnP3DJR17zKYhIGmRXaON0Dw/FDE0oYX root@node1
+
+
+then create one file name authorized_keys in node1 .ssh folder
+After creating file go to master machine and check id_rsa.pub key using cat id_rsa.pub and copy this key and paste this key on node1 authorized_keys file
+
+[root@master .ssh]# cat id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFLpv+ak+PsRyizqitrnGGdaBOZ4f4sdmVfLJNRyY4GYtLoAHnppPFBjKRXZ7LwBdcBLCPR7dAPXCduZJcyJnC2PRN5KN4XqNlnmmJ1mdPFSNlKg6/aJxbrBRYfAeLs+1GmNUkGrpXbQqJXTijIT83URL1fHnojKXjDq24SKN6yAkdMiolavaDVJnOMEWyDFxxjvetXBRJ8heSEYA8bfSDd3ST+s60O867+posqZHzXRjCQ548lwQ1EymIBfmisoUplFip61MyY1dmOgbRn1Nvl31hArGhWeIlljRS5Bf/fx0Riw7sarkjpZ7RrA+MhrBEj60NZ7+Cx3HL0mOAlGxL root@master
+
+
+[root@node1 .ssh]# vi authorized_keys
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFLpv+ak+PsRyizqitrnGGdaBOZ4f4sdmVfLJNRyY4GYtLoAHnppPFBjKRXZ7LwBdcBLCPR7dAPXCduZJcyJnC2PRN5KN4XqNlnmmJ1mdPFSNlKg6/aJxbrBRYfAeLs+1GmNUkGrpXbQqJXTijIT83URL1fHnojKXjDq24SKN6yAkdMiolavaDVJnOMEWyDFxxjvetXBRJ8heSEYA8bfSDd3ST+s60O867+posqZHzXRjCQ548lwQ1EymIBfmisoUplFip61MyY1dmOgbRn1Nvl31hArGhWeIlljRS5Bf/fx0Riw7sarkjpZ7RrA+MhrBEj60NZ7+Cx3HL0mOAlGxL root@master
+
+:wq
+
+Save file
+
+
+[root@node1 .ssh]# ssh master
+Last login: Wed May 31 11:27:14 2023 from node1
+[root@master ~]#
+
+
+
+###################NFS server installation####################
+
+**********On Master****************
+
+yum install nfs-utils -y
+
+systemctl start nfs-server.service
+systemctl status nfs-server.service
+
+rpm -qa | grep nfs
+df -Th
+ls /run/media/hpcsa/CentOS\ 7\ x86_64/
+mkdir /home2
+vim /etc/exports
+
+/home2 192.168.20.163(rw,sync,no_root_squash)
+
+:wq
+save file
+
+exportfs  -a
+showmount -e
+
+if you are rewrite the expot file then use below command
+
+exportfs  -ar  (a- all r- reexport)
+showmount -e
+
+**********On node1****************
+
+yum install nfs-utils -y
+
+systemctl start nfs-server.service
+systemctl status nfs-server.service
+mkdir /home2
+mount -t nfs master:/home2 /home2
+
+#############################################
+
+
+######################DHCP Installation##############
+
+[root@master ~]# vim /etc/dhcp/dhcpd.conf 
+#
+# DHCP Server Configuration file.
+#   see /usr/share/doc/dhcp*/dhcpd.conf.example
+#   see dhcpd.conf(5) man page
+#
+#
+
+
+subnet 192.168.100.0 netmask 255.255.255.0 {
+        option domain-name-servers master;
+        default-lease-time 600;
+        max-lease-time 7200;
+        range 192.168.100.105 192.168.100.120;
+        option routers 192.168.100.100;
+        filename "pxelinux.0";
+        next-server 192.168.100.100;
+
+}
+
+:wq
+save and close file
+-------------------------------------------------     
+dhcpd -t
+systemctl restart dhcpd
+systemctl status dhcpd
+-------------------------------------------
+
+[root@master ~]# mount -t iso9660 -o loop /root/Downloads/CentOS-7-x86_64-DVD-2009.iso /var/pxe/centos7/
+
+[root@master ~]# df -TH
+df -TH
+ls /var/pxe/centos7/
+df -TH | grep centos7
+cp /var/pxe/centos7/images/pxeboot/vmlinuz /var/lib/tftpboot/centos7/
+ll /var/lib/tftpboot/centos7/
+cp /var/pxe/centos7/images/pxeboot/initrd.img /var/lib/tftpboot/centos7/
+ll /var/lib/tftpboot/centos7/
+[root@master ~]# cp /usr/share/syslinux/menu.c32 /var/lib/tftpboot/
+[root@master ~]# ll /var/lib/tftpboot/
+
+0
+
+[root@master ~]# vim /var/lib/tftpboot/pxelinux.cfg/default
+[root@master ~]# cat /var/lib/tftpboot/pxelinux.cfg/default
+# creating PXE defination
+
+timeout 100
+default menu.c3
+
+menu title ######## PXE BOOT MENU ########
+label 1
+	menu label ^1) Install Centos 7
+	kernel centos7/vmlinuz
+	append initrd=centos7/initrd.img method=http://192.168.100.100/centos7 devfs=nomount
+
+label 2
+	menu label ^2) Boot from local drive
+	localboot
+
+
+[root@master ~]# systemctl status httpd
+Unit httpd.service could not be found.
+[root@master ~]# yum install httpd
+
+[root@master ~]# vim /etc/httpd/conf.d/pxeboot.conf
+Alias /centos7 /var/pxe/centos7
+<Directory /var/pxe/centos7>
+	options Indexes FollowSymlinks
+#Ip address we want to allow
+	Require ip 127.0.0.1 192.168.100.0/24
+</Directory>
+
+
+
+
+*************************************
+
+troubleshooting
+
+1 check tftp server is active or not
+2 check DHCP server
+3 check HTTP server
+
+
+*********************PXE Boot : Kickstart Install************
+
+[root@master ~]# python -c 'import crypt,getpass; \
+> print(crypt.crypt(getpass.getpass(), \
+> crypt.mksalt(crypt.METHOD_SHA512)))'
+Password:
+$6$Gbq1IHNUu.l0i3X7$h2dSTj6bUJriBliAsh0D/LS5asb8f5e4tG.DOAfw3hiNUpmJlvXk/X/n5plHydpPm0F7D7KVRpqo4NLAcHxWj1
+
+[root@master ~]#
+
+[root@master ~]# openssl passwd -1 redhat
+$1$LEeIWXoQ$L4WuPQ/XdHypUeSgDZ65B1
+You have new mail in /var/spool/mail/root
+[root@master ~]# vim /var/www/html/ks/centos7-ks.cfg 
+[root@master ~]# 
+
+
+
+
+
+

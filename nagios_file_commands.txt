@@ -1,0 +1,267 @@
+
+********client********************************
+
+1  hostnamectl set-hostname client
+    2  hostname
+    3  vim /etc/selinux/config 
+    4  getenforce
+    5  init 6
+    6  systemctl stop firewalld.service
+    7  systemctl disable firewalld.service
+    8  systemctl status firewalld.service
+    9  yum install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
+   10  yum install yum-utils
+   11  wget -P /etc/yum.repos.d/ http://xcat.org/files/xcat/repos/yum/latest/xcat-core/xcat-core.repo
+   12  yum install nagios.plugins.all.ohpcs nrpe.ohpc
+   13  vim /etc/nagios/nrpe.cfg
+   14  hostname
+   15  ip a | grep ens33
+   16  vim /etc/nagios/nrpe.cfg
+   17  yum installyum install nagios-plugins-all-ohpc nrpe-ohpc
+   18  yum install nagios-plugins-all-ohpc nrpe-ohpc
+   19  vim /etc/nagios/nrpe.cfg
+   20  systemctl start nrpe.service 
+   21  systemctl enable nrpe.service 
+
+*****vim /etc/selinux/config *********
+
+SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of three values:
+#     targeted - Targeted processes are protected,
+#     minimum - Modification of targeted policy. Only selected processes are protected. 
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+
+****************vim /etc/nagios/nrpe.cfg********************
+
+
+nrpe_group=nrpe
+
+
+
+# ALLOWED HOST ADDRESSES
+# This is an optional comma-delimited list of IP address or hostnames
+# that are allowed to talk to the NRPE daemon. Network addresses with a bit mask
+# (i.e. 192.168.1.0/24) are also supported. Hostname wildcards are not currently
+# supported.
+#
+# Note: The daemon only does rudimentary checking of the client's IP
+# address.  I would highly recommend adding entries in your /etc/hosts.allow
+# file to allow only the specified host to connect to the port
+# you are running this daemon on.
+#
+# NOTE: This option is ignored if NRPE is running under either inetd or xinetd
+
+allowed_hosts=127.0.0.1, 192.168.20.142
+
+
+**********vim /etc/nagios/nrpe.cfg********************
+
+no change
+
+
+
+
+******************master ***********************************
+
+1  hostnamectl set-hostname nmaster
+    2  hostname
+    3  hostnamectl set-hostname master
+    4  hostname
+    5  vim /etc/selinux/config
+    6  getenforce 
+    7  init 6
+    8  hostnamectl set-hostname nmaster
+    9  hostname
+   10  hostnamectl set-hostname master
+   11  hostname
+   12  vim /etc/selinux/config
+   13  getenforce 
+   14  init 6
+   15  hostnamectl set-hostname nmaster
+   16  hostname
+   17  hostnamectl set-hostname master
+   18  hostname
+   19  vim /etc/selinux/config
+   20  getenforce 
+   21  init 6
+   22  hostnamectl set-hostname nmaster
+   23  hostname
+   24  hostnamectl set-hostname master
+   25  hostname
+   26  vim /etc/selinux/config
+   27  getenforce 
+   28  init 6
+   29  systemctl stop firewalld.service
+   30  systemctl disable firewalld.service
+   31  systemctl status firewalld.service
+   32  yum install http://build.openhpc.community/OpenHPC:/1.3/CentOS_7/x86_64/ohpc-release-1.3-1.el7.x86_64.rpm
+   33  yum install ohpc-nagios
+   34  cd /etc/nagios/
+   35  htpasswd -bc /etc/nagios/passwd nagiosadmin nagiosadmin
+   36  systemctl start nagios
+   37  systemctl status nagios
+   38  systemctl enable nagios
+   39  systemctl status httpd
+   40  systemctl start httpd
+   41  systemctl status httpd
+   42  ip a | grep ens33
+   43  vim nagios.cfg 
+   44  systemctl start nagios
+   45  cd /etc/nagios/conf.d/
+   46  ls
+   47  vim hosts.cfg
+   48  vim hosts.cfg.example 
+   49  vim hosts.cfg.example
+   50  ls
+   51  cp hosts.cfg.example hosts.cfg
+   53  vim hosts.cfg
+   54  cp services.cfg.example services.cfg
+   55  ls
+   56  vim services.cfg
+   57  chown -R nagios:nagios /etc/nagios/conf.d/services.cfg
+   58  systemctl restart nagios
+   59  mkdir -p /var/run/nagios/
+   60  chown -R nagios:nagios /var/run/nagios/
+   61  systemctl restart nagios
+   62  vim services.cfg
+   63  chown -R nagios:nagios /etc/nagios/conf.d/services.cfg
+   64  systemctl restart nagios
+   65  journalctl -xe
+   66  vim hosts.cfg
+   67  systemctl restart nagios
+   68  vim commands.cfg
+   69  cd /usr/lib64/nagios/plugins/
+   70  systemctl restart nagios
+   71  ip a
+   72  systemctl status httpd
+
+**********vim nagios.cfg **********
+
+no change
+
+
+********************vim hosts.cfg**********************
+
+## Linux Host Template ##
+define host{
+        name linux-box ; Name of this template
+        use generic-host ; Inherit default values
+        check_period 24x7
+        check_interval 3
+        retry_interval 1
+        max_check_attempts 10
+        check_command check-host-alive
+        notification_period 24x7
+        notification_interval 30
+        notification_options d,r
+        contact_groups admins
+        register 0 ; DONT REGISTER THIS - ITS A TEMPLATE
+}
+
+define hostgroup {
+        hostgroup_name compute
+        alias compute nodes
+        members client
+}
+
+# example configuration of 4 remote linux systems
+define host{
+        use linux-box      ; Inherit default values from a template
+        host_name client   ; The name we're giving to this server
+        alias client1        ; A longer name for the server
+        address 192.168.20.146   ; IP address of Remote Linux host
+
+}
+
+
+
+
+***********************vim services.cfg******************
+
+ example of remote services to check
+define service{
+        use                     generic-service
+        hostgroup_name          compute
+        service_description     CPU Load
+        check_command           check_nrpe!check_load
+        }
+
+define service{
+        use                     generic-service
+        hostgroup_name          compute
+        service_description     Total Processes
+        check_command           check_nrpe!check_total_procs
+        }
+
+define service{
+        use                     generic-service
+        hostgroup_name          compute
+        service_description     Current Users
+        check_command           check_nrpe!check_users
+        }
+
+define service{
+        use                     generic-service
+        hostgroup_name          compute
+        service_description     SSH Monitoring
+        check_command           check_nrpe!check_ssh
+        }
+
+define service{
+        use                     generic-service
+        hostgroup_name          compute
+        service_description     Zombie Processes
+        check_command           check_nrpe!check_zombie_procs
+        }
+~                                                                                                                                                                                            
+~              
+
+
+
+***********************vim hosts.cfg*****************************
+
+
+## Linux Host Template ##
+define host{
+        name linux-box ; Name of this template
+        use generic-host ; Inherit default values
+        check_period 24x7
+        check_interval 3
+        retry_interval 1
+        max_check_attempts 10
+        check_command check-host-alive
+        notification_period 24x7
+        notification_interval 30
+        notification_options d,r
+        contact_groups admins
+        register 0 ; DONT REGISTER THIS - ITS A TEMPLATE
+}
+
+define hostgroup {
+        hostgroup_name compute
+        alias compute nodes
+        members client
+}
+
+# example configuration of 4 remote linux systems
+define host{
+        use linux-box      ; Inherit default values from a template
+        host_name client   ; The name we're giving to this server
+        alias client1        ; A longer name for the server
+        address 192.168.20.146   ; IP address of Remote Linux host
+
+}
+
+~                                                                                                                                                                                            
+~     
+
+
+**************************vim commands.cfg***************************
+
+no change            
